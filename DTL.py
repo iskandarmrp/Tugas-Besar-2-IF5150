@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import math
+from collections import Counter
 
 
 
@@ -21,36 +22,42 @@ class DTL:
 
         def buildTree(self, S, Y):
             if entropy(S[Y]) == 0:
-                return self.addResult(Y, S[Y].iloc[0])
+                return self.addResult(Y, S[Y].mode()[0])
             elif len(S.columns) == 1:
                 return self.addResult(Y, S[Y].mode()[0]) 
             else:
                 feature = max_gain(S, Y) 
                 self.name = feature
-                values_list = S[feature].value_counts()
-                filtered_values = [value for value in values_list.index if value in S[feature].values]
-                sorted_values = filtered_values
-                for value in sorted_values:
+                for value in S[feature].unique():
                     newS = S.loc[S[feature] == value].drop(columns=feature)
                     self.foots[value] = self.addFoots(newS, Y) 
-            return self
+            return self           
 
         def inferenceTree(self, root, X):
             while isinstance(root.foots, dict):
-                if root.name not in X: 
-                    raise ValueError(f"Feature '{root.name}' not found in input data.")
-                if X[root.name] not in root.foots:
+                if root.name not in X.columns: 
+                    break
+                if X[root.name].iloc[0] not in root.foots.keys():
                     key, root = next(iter(root.foots.items()))
                 else:
-                    root = root.foots[X[root.name]] 
+                    root = root.foots[X[root.name].iloc[0]] 
             return root
+        
+        def fit(self, X, Y):
+            Y = pd.Series(Y, name='label')
+            if isinstance(X, np.ndarray):
+                X = pd.DataFrame(X)
+            X = pd.concat([X, Y], axis=1)   
+            return self.buildTree(X, 'label')
 
         def predict(self, X):
+            X = pd.DataFrame(X)
             result = []
             for _, row in X.iterrows():
                 y = self.inferenceTree(self, row)
                 result.append(y.foots)
             return result
+        
 
 def entropy(S):
     class_list = S.unique()
