@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 class NaiveBayes:
 
@@ -44,6 +45,7 @@ class NaiveBayes:
         mean = self._mean[class_idx]
         var = self._var[class_idx]
         var = np.maximum(var, 1e-9)
-        numerator = np.exp(-((x - mean) ** 2) / (2 * var))
+        val = -1*((x - mean) ** 2) / (2 * var)
+        numerator = np.array([math.exp(i) for i in val])
         denominator = np.sqrt(2 * np.pi * var)
         return np.maximum(numerator / denominator, 1e-9)

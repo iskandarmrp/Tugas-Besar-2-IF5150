@@ -20,7 +20,7 @@ class RandomForest():
         
         return self
     
-    def predict(self, X):
+    def _predict(self, X):
         predictions = []
         if isinstance(X, pd.DataFrame):
             pass
@@ -35,6 +35,15 @@ class RandomForest():
         count = Counter(predictions)
         mode_prediction = count.most_common(1)[0][0]
         return mode_prediction
+    
+    def predict(self, X):
+        y_pred = []
+        for row in X:
+            row_df = pd.DataFrame([row])
+            prediction = self._predict(row_df) 
+            y_pred.append(prediction)
+
+        return y_pred
     
     def fit(self, X, Y):
         Y = pd.Series(Y, name='label')
