@@ -2,48 +2,40 @@ import numpy as np
 import math
 
 class NaiveBayes:
-
-    def __init__ (self):
-        pass
-
     def fit(self, X, y):
-        n_samples, n_features = X.shape
-        self._classes = np.unique(y)
-        n_classes = len(self._classes)
+        num_samples, num_features = X.shape
+        self.unique_classes = np.unique(y)
+        num_classes = len(self.unique_classes)
+        self.class_means = np.zeros((num_classes, num_features), dtype=np.float64)
+        self.class_vars = np.zeros((num_classes, num_features), dtype=np.float64)
+        self.class_priors = np.zeros(num_classes, dtype=np.float64)
 
-        # calculate mean, var, and prior for each class
-        self._mean = np.zeros((n_classes, n_features), dtype=np.float64)
-        self._var = np.zeros((n_classes, n_features), dtype=np.float64)
-        self._priors = np.zeros(n_classes, dtype=np.float64)
-
-        for idx, c in enumerate(self._classes):
-            X_c = X[y == c]
-            self._mean[idx, :] = X_c.mean(axis=0)
-            self._var[idx, :] = X_c.var(axis=0)
-            self._priors[idx] = X_c.shape[0] / float(n_samples)
+        for idx, class_label in enumerate(self.unique_classes):
+            data_class = X[y == class_label]
+            self.class_means[idx, :] = data_class.mean(axis=0)
+            self.class_vars[idx, :] = data_class.var(axis=0)
+            self.class_priors[idx] = data_class.shape[0] / float(num_samples)
             
 
     def predict(self, X):
-        y_pred = [self._predict(x) for x in X]
-        return np.array(y_pred)
+        predictions = [self._predict(x) for x in X]
+        return np.array(predictions)
 
     def _predict(self, x):
-        posteriors = []
+        class_posteriors = []
 
-        # calculate posterior probability for each class
-        for idx, c in enumerate(self._classes):
-            prior = np.log(self._priors[idx])
-            posterior = np.sum(np.log(self._pdf(idx, x)))
-            posterior = posterior + prior
-            posteriors.append(posterior)
+        for idx, class_label in enumerate(self.unique_classes):
+            log_prior = np.log(self.class_priors[idx])
+            log_likelihood = np.sum(np.log(self._calculate_pdf(idx, x)))
+            log_posterior = log_likelihood + log_prior
+            class_posteriors.append(log_posterior)
 
-        # return class with the highest posterior
-        return self._classes[np.argmax(posteriors)]
+        return self.unique_classes[np.argmax(class_posteriors)]
 
-    def _pdf(self, class_idx, x):
+    def _calculate_pdf(self, class_idx, x):
         x = np.asarray(x)
-        mean = self._mean[class_idx]
-        var = self._var[class_idx]
+        mean = self.class_means[class_idx]
+        var = self.class_vars[class_idx]
         var = np.maximum(var, 1e-9)
         val = -1*((x - mean) ** 2) / (2 * var)
         numerator = np.array([math.exp(i) for i in val])
