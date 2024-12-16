@@ -22,6 +22,11 @@ class RandomForest():
     
     def predict(self, X):
         predictions = []
+        if isinstance(X, pd.DataFrame):
+            pass
+        else:
+            X = pd.DataFrame(X)
+
         for i in self.foots.keys():
             root = self.foots[i]
             pred = root.inferenceTree(root, X)

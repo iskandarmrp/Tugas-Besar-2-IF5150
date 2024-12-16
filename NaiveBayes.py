@@ -40,8 +40,10 @@ class NaiveBayes:
         return self._classes[np.argmax(posteriors)]
 
     def _pdf(self, class_idx, x):
+        x = np.asarray(x)
         mean = self._mean[class_idx]
         var = self._var[class_idx]
+        var = np.maximum(var, 1e-9)
         numerator = np.exp(-((x - mean) ** 2) / (2 * var))
         denominator = np.sqrt(2 * np.pi * var)
-        return numerator / denominator
+        return np.maximum(numerator / denominator, 1e-9)
